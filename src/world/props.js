@@ -22,7 +22,7 @@ const ROCK_COLOR = 0x888888;
 const BUSH_COLOR = 0x2a5a2a;
 const PILLAR_COLOR = 0xcccac0;
 
-export function scatterProps(scene, heightAt, { seed = 1337 } = {}) {
+export function scatterProps(scene, heightAt, colliders, { seed = 1337 } = {}) {
   const rand = mulberry32(seed);
   const group = new THREE.Group();
   group.name = 'props';
@@ -62,6 +62,7 @@ export function scatterProps(scene, heightAt, { seed = 1337 } = {}) {
       tree.scale.setScalar(s);
       tree.rotation.y = rand() * Math.PI * 2;
       mesh = tree;
+      if (colliders) colliders.push({ type: 'circle', x, z, r: 0.3 * s });
     } else if (pick < 0.75) {
       // Rock: icosahedron, random rotation.
       const rock = new THREE.Mesh(rockGeom, rockMat);
@@ -70,6 +71,7 @@ export function scatterProps(scene, heightAt, { seed = 1337 } = {}) {
       rock.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI);
       rock.position.y = 0.3;
       mesh = rock;
+      if (colliders) colliders.push({ type: 'circle', x, z, r: 0.6 * s });
     } else if (pick < 0.95) {
       // Bush: squashed sphere.
       const bush = new THREE.Mesh(bushGeom, bushMat);
@@ -77,10 +79,10 @@ export function scatterProps(scene, heightAt, { seed = 1337 } = {}) {
       bush.position.y = 0.3;
       mesh = bush;
     } else {
-      // Pillar: distant landmark.
       const p = new THREE.Mesh(pillarGeom, pillarMat);
       p.position.y = 2.25;
       mesh = p;
+      if (colliders) colliders.push({ type: 'circle', x, z, r: 0.3 });
     }
 
     mesh.position.set(x, y, z);

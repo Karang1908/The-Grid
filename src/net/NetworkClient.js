@@ -12,11 +12,12 @@ import { MSG } from '../../shared/protocol.js';
 
 export class NetworkClient {
   constructor({
-    url = `ws://${location.hostname}:8080`,
+    url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`,
     onInit,
     onJoin,
     onState,
     onLeave,
+    onName,
     onStatusChange,
   } = {}) {
     this.url = url;
@@ -24,6 +25,7 @@ export class NetworkClient {
     this.onJoin = onJoin || (() => {});
     this.onState = onState || (() => {});
     this.onLeave = onLeave || (() => {});
+    this.onName = onName || (() => {});
     this.onStatusChange = onStatusChange || (() => {});
     this.ws = null;
     this.selfId = null;
@@ -83,9 +85,18 @@ export class NetworkClient {
         if (msg.id !== this.selfId) this.onLeave(msg);
         break;
       }
+      case MSG.NAME: {
+        if (msg.id !== this.selfId) this.onName(msg);
+        break;
+      }
       default:
         console.warn('network: unknown msg type', msg.type);
     }
+  }
+
+  sendName(name) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify({ type: MSG.NAME, name }));
   }
 
   sendState(state) {

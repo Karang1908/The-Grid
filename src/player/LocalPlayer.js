@@ -71,8 +71,8 @@ export class LocalPlayer {
     }
 
     if (colliders && colliders.length > 0) {
-      // 1.0 is player radius, 2.0 is player height
-      const resolved = resolveCollisions(this.position.x, this.position.y, this.position.z, 1.0, 2.0, colliders);
+      // 0.35 is realistic humanoid player radius, 1.8 is player height
+      const resolved = resolveCollisions(this.position.x, this.position.y, this.position.z, 0.35, 1.8, colliders);
       this.position.x = resolved.x;
       this.position.z = resolved.z;
     }

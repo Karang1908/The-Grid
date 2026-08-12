@@ -4,28 +4,35 @@ import * as THREE from 'three';
 // Keeps terrain gentle so movement across the open world feels like rolling hills,
 // not a spike field. Amplitude ~1.5m over 400m.
 export function heightAt(x, z) {
-  return (
+  const h = (
     Math.sin(x * 0.05) * Math.cos(z * 0.05) * 1.2 +
     Math.sin(x * 0.13 + 1.7) * Math.cos(z * 0.09 - 0.4) * 0.5
   );
+  // Flatten the center 60m radius for the city
+  const dist = Math.sqrt(x * x + z * z);
+  const blend = Math.max(0, Math.min(1, (dist - 50) / 20));
+  return h * blend;
 }
 
-export function createWorld(scene) {
+export function createWorld(scene, group, colliders, walkableSurfaces) {
+  // Lighting
   const sky = 0x8ec9f0;
   scene.background = new THREE.Color(sky);
   scene.fog = new THREE.Fog(sky, 40, 220);
 
-  // Lighting: hemisphere fill + one directional sun. Shadows off for chapter one.
-  const hemi = new THREE.HemisphereLight(0xbfd9ff, 0x3d7a3d, 0.8);
-  scene.add(hemi);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  scene.add(ambientLight);
 
-  const sun = new THREE.DirectionalLight(0xfff2d6, 1.2);
-  sun.position.set(60, 100, 30);
-  scene.add(sun);
+  const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
+  dirLight.position.set(200, 300, 100);
+  scene.add(dirLight);
 
-  // Ground: 400m x 400m plane, 100x100 segments, vertices displaced by heightAt.
-  const SIZE = 400;
-  const SEGMENTS = 100;
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+  scene.add(hemiLight);
+
+  // Ground: 1000m x 1000m plane
+  const SIZE = 1000;
+  const SEGMENTS = 200;
   const geometry = new THREE.PlaneGeometry(SIZE, SIZE, SEGMENTS, SEGMENTS);
   geometry.rotateX(-Math.PI / 2); // lie flat
   const pos = geometry.attributes.position;

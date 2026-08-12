@@ -6,6 +6,7 @@ export const MSG = Object.freeze({
   JOIN: 'join',
   STATE: 'state',
   LEAVE: 'leave',
+  NAME: 'name',
 });
 
 // Server-assigned player colors, cycled round-robin.

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GDGoC · The Grid</title>
+  <style>
+    :root {
+      --overlay-bg: rgba(8, 14, 24, 0.55);
+      --overlay-fg: #f5f7fa;
+      --overlay-accent: #8ec9f0;
+    }
+    html, body { height: 100%; margin: 0; padding: 0; background: #1a1a1a; color: var(--overlay-fg); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+    canvas { display: block; }
+    #app { position: fixed; inset: 0; }
+    #overlay {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--overlay-bg);
+      backdrop-filter: blur(4px);
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+    }
+    #overlay.hidden { display: none; }
+    #overlay .card {
+      text-align: center;
+      padding: 2rem 2.5rem;
+      border-radius: 14px;
+      background: rgba(20, 28, 42, 0.7);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+    #overlay h1 { margin: 0 0 0.5rem; font-size: 1.4rem; letter-spacing: 0.04em; }
+    #overlay p { margin: 0.4rem 0; opacity: 0.85; font-size: 0.95rem; }
+    #overlay .key { display: inline-block; min-width: 1.6em; padding: 0 0.4em; border-radius: 4px; background: rgba(255,255,255,0.12); font-family: ui-monospace, monospace; }
+    #status {
+      position: fixed; bottom: 12px; left: 12px;
+      padding: 0.4rem 0.7rem;
+      border-radius: 8px;
+      background: rgba(8, 14, 24, 0.55);
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      z-index: 5;
+    }
+    #status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: #c44; }
+    #status.connected .dot { background: #4c4; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="overlay">
+    <div class="card">
+      <h1>Click to play</h1>
+      <p>Move with <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>, run with <span class="key">Shift</span>.</p>
+      <p>Toggle camera with <span class="key">C</span>. Mouse to look. <span class="key">Esc</span> releases the mouse.</p>
+    </div>
+  </div>
+  <div id="status"><span class="dot"></span><span id="status-text">connecting…</span></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

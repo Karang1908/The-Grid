@@ -37,7 +37,13 @@ export class PointerLockInput {
 
   requestLock() {
     if (this.locked) return;
-    this.canvas.requestPointerLock();
+    // Lock the document element rather than the canvas. Browsers require
+    // requestPointerLock() to be called inside a user-gesture handler that originated
+    // on (or at least bubbled to) the target element. The overlay sits on top of the
+    // canvas and absorbs the "click to play" click, so locking on the canvas from that
+    // click is unreliable across browsers. document.documentElement is always present
+    // and accepts pointer-lock identically to any other element.
+    document.documentElement.requestPointerLock();
   }
 
   _onMouseMove(e) {
@@ -51,7 +57,11 @@ export class PointerLockInput {
   }
 
   _onPointerLockChange() {
-    this.locked = document.pointerLockElement === this.canvas;
+    // Pointer-lock is a binary state for our purposes — the specific locked element
+    // doesn't matter. The overlay (not the canvas) may be the locked element when the
+    // user clicks "click to play", so comparing to this.canvas would incorrectly
+    // report unlocked and keep the overlay visible forever.
+    this.locked = document.pointerLockElement != null;
     this.onLockChange(this.locked);
   }
 

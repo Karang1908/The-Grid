@@ -12,7 +12,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.185.1",
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "playcanvas": "^2.21.3",
     "ws": "^8.21.3"
   },
   "devDependencies": {

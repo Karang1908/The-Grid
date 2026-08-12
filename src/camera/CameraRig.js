@@ -31,27 +31,29 @@ export class CameraRig {
   // Called every frame after the player position has been updated.
   // pitch/yaw are clamped/derived from the pointer-lock input; passed in so the rig
   // stays decoupled from the input pipeline.
-  update(playerPos, yaw, pitch) {
+  update(playerPos, yaw, pitch, isDriving = false) {
     if (this.mode === 'first') {
       this.camera.position.set(
         playerPos.x,
-        playerPos.y + FIRST_PERSON_EYE_HEIGHT,
+        playerPos.y + (isDriving ? 1.0 : FIRST_PERSON_EYE_HEIGHT),
         playerPos.z,
       );
       this._euler.set(clampPitch(pitch), yaw, 0, 'YXZ');
       this.camera.quaternion.setFromEuler(this._euler);
     } else {
       // Spherical offset behind/above the player, using both yaw and pitch.
+      const dist = isDriving ? 6.5 : THIRD_PERSON_DISTANCE;
+      const targetHeight = isDriving ? 1.6 : THIRD_PERSON_TARGET_HEIGHT;
       const p = clampPitch(pitch);
       const cp = Math.cos(p);
       const sp = Math.sin(p);
       this._forward.set(-Math.sin(yaw) * cp, sp, -Math.cos(yaw) * cp);
       this._target.set(
         playerPos.x,
-        playerPos.y + THIRD_PERSON_TARGET_HEIGHT,
+        playerPos.y + targetHeight,
         playerPos.z,
       );
-      this.camera.position.copy(this._target).addScaledVector(this._forward, -THIRD_PERSON_DISTANCE);
+      this.camera.position.copy(this._target).addScaledVector(this._forward, -dist);
       this.camera.lookAt(this._target);
     }
   }

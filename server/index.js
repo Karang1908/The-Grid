@@ -17,7 +17,7 @@ const PORT = 8080;
 
 const wss = new WebSocketServer({ port: PORT });
 
-// id -> { id, color, x, y, z, yaw, speed, isRunning, ws }
+// id -> { id, color, name, x, y, z, yaw, speed, isRunning, isProne, isJumping, ws }
 const players = new Map();
 let colorIndex = 0;
 
@@ -41,12 +41,15 @@ function snapshot(excludeId) {
     out.push({
       id: p.id,
       color: p.color,
+      name: p.name || 'Player',
       x: p.x,
       y: p.y,
       z: p.z,
       yaw: p.yaw,
       speed: p.speed,
       isRunning: p.isRunning,
+      isProne: p.isProne,
+      isJumping: p.isJumping,
     });
   }
   return out;
@@ -60,12 +63,15 @@ wss.on('connection', (ws) => {
   const player = {
     id,
     color,
+    name: 'Player',
     x: 0,
     y: 0,
     z: 0,
     yaw: 0,
     speed: 0,
     isRunning: false,
+    isProne: false,
+    isJumping: false,
     ws,
   };
   players.set(id, player);
@@ -73,10 +79,10 @@ wss.on('connection', (ws) => {
   console.log(`[server] + connect ${id.slice(0, 8)} (color #${color.toString(16)}) -> ${players.size} players`);
 
   // First: INIT with own id/color + snapshot of existing players (excluding self).
-  send(ws, { type: MSG.INIT, id, color, players: snapshot(id) });
+  send(ws, { type: MSG.INIT, id, color, name: player.name, players: snapshot(id) });
 
   // Then: tell everyone else about the new join.
-  broadcastOthers(id, { type: MSG.JOIN, id, color, x: 0, y: 0, z: 0, yaw: 0 });
+  broadcastOthers(id, { type: MSG.JOIN, id, color, name: player.name, x: 0, y: 0, z: 0, yaw: 0 });
 
   ws.on('message', (raw) => {
     let msg;
@@ -86,6 +92,14 @@ wss.on('connection', (ws) => {
       console.warn(`[server] bad JSON from ${id.slice(0, 8)}: ${err.message}`);
       return;
     }
+
+    if (msg.type === MSG.NAME) {
+      const name = typeof msg.name === 'string' ? msg.name.trim().slice(0, 16) : 'Player';
+      player.name = name || 'Player';
+      broadcastOthers(id, { type: MSG.NAME, id, name: player.name });
+      return;
+    }
+
     if (msg.type === MSG.STATE) {
       // Sanity-bound the values so a buggy client can't break everyone else.
       const x = Number.isFinite(msg.x) ? msg.x : 0;
@@ -94,6 +108,12 @@ wss.on('connection', (ws) => {
       const yaw = Number.isFinite(msg.yaw) ? msg.yaw : 0;
       const speed = Number.isFinite(msg.speed) ? msg.speed : 0;
       const isRunning = !!msg.isRunning;
+      const isProne = !!msg.isProne;
+      const isJumping = !!msg.isJumping;
+
+      if (typeof msg.name === 'string' && msg.name.trim()) {
+        player.name = msg.name.trim().slice(0, 16);
+      }
 
       player.x = x;
       player.y = y;
@@ -101,14 +121,19 @@ wss.on('connection', (ws) => {
       player.yaw = yaw;
       player.speed = speed;
       player.isRunning = isRunning;
+      player.isProne = isProne;
+      player.isJumping = isJumping;
 
       broadcastOthers(id, {
         type: MSG.STATE,
         id,
+        name: player.name,
         x, y, z,
         yaw,
         speed,
         isRunning,
+        isProne,
+        isJumping,
       });
     }
   });

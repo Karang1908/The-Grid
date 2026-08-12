@@ -8,10 +8,23 @@ export function heightAt(x, z) {
     Math.sin(x * 0.05) * Math.cos(z * 0.05) * 1.2 +
     Math.sin(x * 0.13 + 1.7) * Math.cos(z * 0.09 - 0.4) * 0.5
   );
-  // Flatten the center 60m radius for the city
-  const dist = Math.sqrt(x * x + z * z);
-  const blend = Math.max(0, Math.min(1, (dist - 50) / 20));
-  return h * blend;
+  // 1. Flatten city center (70m radius)
+  const distCenter = Math.sqrt(x * x + z * z);
+  let cityBlend = Math.max(0, Math.min(1, (distCenter - 55) / 20));
+
+  // 2. Flatten campsite area at (0, 450)
+  const distCamp = Math.sqrt(x * x + (z - 450) * (z - 450));
+  let campBlend = Math.max(0, Math.min(1, (distCamp - 20) / 15));
+
+  // 3. Flatten outskirts road corridor along X=0, Z between 50 and 450
+  let roadBlend = 1.0;
+  if (z >= 40 && z <= 460) {
+    const absX = Math.abs(x);
+    roadBlend = Math.max(0, Math.min(1, (absX - 6) / 10));
+  }
+
+  const finalBlend = Math.min(cityBlend, campBlend, roadBlend);
+  return h * finalBlend;
 }
 
 export function createWorld(scene, group, colliders, walkableSurfaces) {
